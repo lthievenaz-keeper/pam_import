@@ -51,6 +51,8 @@ ___
 - Create PAM resource records
 - Set connection, rbi, and tunnel settings on PAM resources, linking to PAM Configurations and PAM User records in the project
 
+- Run the import again, setting existing KSM Application / Gateways / PAM Configurations so resources can be added to _existing_ models.
+
 ## Limitations  
 
 - Object titles should be unique. This includes:
