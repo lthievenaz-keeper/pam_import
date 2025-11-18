@@ -66,6 +66,10 @@ For items marked with *, the names must be unique across the Keeper Vault. Other
 - The import generates a PAM configuration with all features enabled (that can be enabled with Commander). This can be edited after the import is complete.
 - The import shares the user shared folders to your KSM app with can-edit permissions. This can be edited after the import is complete.
 
+## Debugging
+
+To toggle the display of Debug statements during the import, change the `DEBUG` constant at the beginning of the Python file.
+
 ___
 ## CSV Format
 
