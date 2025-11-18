@@ -11,6 +11,7 @@ pip install keepercommander
 pip install rich
 ```
 Rich is used for CLI styling, it can be skipped, however ensure the import statements at the head of the file are removed.
+
 ## Usage
 Run the script:
 ```
@@ -32,6 +33,7 @@ If you've completed the _CLI Prompts and CSV Files_ already, or if you created y
 ### 3. Partial JSON File
 If you would like to resume from an autosave file, or have a partially completed JSON template, you can use this method to skip to specific steps in the CLI import.
 
+___
 ## Capabilities
 
 - Create KSM Application
@@ -61,8 +63,11 @@ For items marked with *, the names must be unique across the Keeper Vault. Other
 - The import generates a PAM configuration with all features enabled (that can be enabled with Commander). This can be edited after the import is complete.
 - The import shares the user shared folders to your KSM app with can-edit permissions. This can be edited after the import is complete.
 
+___
 ## CSV Format
+
 ### 1. Users CSV
+
 | shared_folder | folder_path       | title  | login  | password | pam_config   | {kwargs*}| _rotation.{kwargs*} |
 | ------------- | ----------------- | ------ | ------ | -------- | ------------ | -------- | ------------------- |
 | Users         |                   | root   | user01 | pwd01    | $config_name | {value*} | {value*}            |
@@ -81,11 +86,43 @@ For items marked with *, the names must be unique across the Keeper Vault. Other
 | ------------------ | ------------------- |
 | $resource_name     | _                   |
 
-- Values prefixed with `$` refer to a record within the project
+- Values prefixed with `$` refer to the title of a record within the project
 - For Commander flags that don't expect a value, use `_`
 - All Commander arguments should use the long form (e.g. `_rotation.on-demand` and not `_rotation.od`)
 
-Required columns for a PAM User with active local rotation:  
+Required columns for a PAM User with active local rotation:
+
 | shared_folder | folder_path       | title  | login  | password | pam_config   | _rotation.resource | _rotation.on-demand |
 | ------------- | ----------------- | ------ | ------ | -------- | ------------ | ------------------ | ------------------- |
 | Users         |                   | root   | user01 | pwd01    | $config_name | $resource_name     | _                   |
+
+___
+### 2. Resources CSV
+
+| shared_folder | folder_path       | title | type         | pam_config   | {kwargs*} | _connection.{kwargs*}  | _rbi.{kwargs*} | _tunnel.{kwargs*} |
+| ------------- | ----------------- | ----- | ------------ | ------------ | --------- | ---------------------- | -------------- | ----------------- |
+| Resources     |                   | AD01  | pamDirectory | $config_name | {value*}  | {value*}               | {value*}       | {value*}          |
+| Resources2    | folder01/folder02 | SRV01 | pamMachine   | $config_name | {value*}  | {value*}               | {value*}       | {value*}          |
+
+- The default separator for the `folder_path` column is `/`, however this can be customized in the CLI import.
+- Beyond the first 4 columns, `{kwargs*}` are Commander arguments for the `record-add` command. For instance:
+
+| pamHostname   | operatingSystem |
+| ------------- | --------------- | 
+| 10.10.0.15:22 | linux           |
+
+- `_connection{kwargs*}`, `_rbi{kwargs*}` and `_tunnel{kwargs*}` are Commander arguments for the `pam connection`, `rbi` and `tunnel edit` commands. For instance:
+
+| _connection.protocol | _connection.admin-user |
+| -------------------- | ---------------------- | 
+| rdp                  | $PAMuser_name          |
+
+- Values prefixed with `$` refer to the title of a record within the project
+- For Commander flags that don't expect a value, use `_`
+- All Commander arguments should use the long form (e.g. `_connection.protocol` and not `_connection.p`)
+
+Required columns for a RDP PAM Machine:
+
+| shared_folder | folder_path       | title | type         | pam_config   | pamHostname   | _connection.admin-user  | _connection.protocol |
+| ------------- | ----------------- | ----- | ------------ | ------------ | ------------- | ----------------------- | -------------------- |
+| Resources     |                   | srv1  | pamMachine   | $config_name | 10.0.0.5:3389 | $PAMuser_name           | rdp                  |
