@@ -4,6 +4,7 @@ from rich.markdown import Markdown
 ## RICH Console styling ##
 
 USE_RICH = False
+DEBUG = False
 try:
     console = Console()
     USE_RICH = True
@@ -49,7 +50,8 @@ def validate_file_upload(format):
 
 
 def debug(text):
-    print(f'>>DEBUG: {text}')
+    if DEBUG:
+        print(f'>>DEBUG: {text}')
 
 class Project:
     def __init__(self):  
@@ -653,5 +655,6 @@ class Project:
         display('# Your import has completed','bold green')
         
 Project()
+
 
 
