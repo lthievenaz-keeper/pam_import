@@ -653,6 +653,14 @@ class Project:
                 update_record(record,'tunnel')
         
         display('# Your import has completed','bold green')
+        gateway_info = []
+        for gateway in self.json['gateways']:
+            if gateway['new_build'] and gateway['token']:
+                gateway_info.append(f'{gateway["name"]}: {gateway["token"]}')
+        if gateway_info:
+            display('## Gateway initialization information:','green')
+            list_items(gateway_info,'green')
+        display('## Please make sure you dispose of any CSV / JSON file containing sensitive data','italic red')
         
 Project()
 
