@@ -110,6 +110,8 @@ Required columns for a PAM User with active local rotation:
 | ------------- | ----------------- | ------ | ------ | -------- | ------------ | ------------------ | ------------------- |
 | Users         |                   | root   | user01 | pwd01    | $config_name | $resource_name     | _                   |
 
+(You do not need to set `configuration` or `config` as a flag - it is set automatically from the `pam_config` column)
+
 ___
 ### 2. Resources CSV
 
@@ -140,6 +142,8 @@ Required columns for a RDP PAM Machine:
 | shared_folder | folder_path       | title | type         | pam_config   | pamHostname   | _connection.admin-user  | _connection.protocol |
 | ------------- | ----------------- | ----- | ------------ | ------------ | ------------- | ----------------------- | -------------------- |
 | Resources     |                   | srv1  | pamMachine   | $config_name | 10.0.0.5:3389 | $PAMuser_name           | rdp                  |
+
+(You do not need to set `configuration` or `config` as a flag - it is set automatically from the `pam_config` column)
 
 ___
 ## JSON Format
