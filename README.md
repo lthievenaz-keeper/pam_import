@@ -24,7 +24,7 @@ Run the script:
 python pam_import.py
 ```
 ### 1. CLI Prompts and CSV Files
-The CLI Import collects information about your project, KSM Application0, Gateway(s), and PAM Configuration(s), then requires two CSVs:
+The CLI Import collects information about your project, KSM Application, Gateway(s), and PAM Configuration(s), then requires two CSVs:
 - A CSV for PAM user records.
 - A CSV for PAM resource records.
 Consult the _CSV Format_ chapter to find out more about CSV syntax.
