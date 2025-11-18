@@ -87,7 +87,7 @@ ___
 | Users         |                   | root   | user01 | pwd01    | $config_name | {value*} | {value*}            |
 | Users2        | folder01/folder02 | nested | user02 | pwd02    | $config_name | {value*} | {value*}            |
 
-- The default separator for the `folder_path` column is `/`, however this can be customized in the CLI import.
+- The default separator for the `folder_path` column is `/`, however this can be customized in the CLI import
 - Beyond the first 6 columns, `{kwargs*}` are Commander arguments for the `record-add` command. For instance:
 
 | distinguishedName                                  | text.custom_field_name |
@@ -100,7 +100,7 @@ ___
 | ------------------ | ------------------- |
 | $resource_name     | _                   |
 
-- Values prefixed with `$` refer to the title of a record within the project
+- Values prefixed with `$` refer to the title of a record within the project (or the PAM Configuration)
 - For Commander flags that don't expect a value, use `_`
 - All Commander arguments should use the long form (e.g. `_rotation.on-demand` and not `_rotation.od`)
 
@@ -118,7 +118,7 @@ ___
 | Resources     |                   | AD01  | pamDirectory | $config_name | {value*}  | {value*}               | {value*}       | {value*}          |
 | Resources2    | folder01/folder02 | SRV01 | pamMachine   | $config_name | {value*}  | {value*}               | {value*}       | {value*}          |
 
-- The default separator for the `folder_path` column is `/`, however this can be customized in the CLI import.
+- The default separator for the `folder_path` column is `/`, however this can be customized in the CLI import
 - Beyond the first 4 columns, `{kwargs*}` are Commander arguments for the `record-add` command. For instance:
 
 | pamHostname   | operatingSystem |
@@ -131,7 +131,7 @@ ___
 | -------------------- | ---------------------- | 
 | rdp                  | $PAMuser_name          |
 
-- Values prefixed with `$` refer to the title of a record within the project
+- Values prefixed with `$` refer to the title of a record within the project (or the PAM Configuration)
 - For Commander flags that don't expect a value, use `_`
 - All Commander arguments should use the long form (e.g. `_connection.protocol` and not `_connection.p`)
 
