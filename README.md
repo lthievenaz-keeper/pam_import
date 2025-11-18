@@ -1,5 +1,9 @@
 # pam_import
 Python script to import complex nested models from CSV to KeeperPAM.  
+
+# ⚠️
+CSVs and JSON files handled by this scripts will include sensitive user information in plain text. Make sure to dispose of these files accordingly.
+
 Output of example CSVs:  
 <img width="315" height="1200" alt="Vault screenshot" src="https://github.com/user-attachments/assets/1a5beb76-c6cb-4c64-99c3-a84d241d1963" />
 
