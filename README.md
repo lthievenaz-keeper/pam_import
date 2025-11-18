@@ -29,7 +29,8 @@ The CLI Import collects information about your project, KSM Application, Gateway
 - A CSV for PAM resource records.  
 Consult the _CSV Format_ chapter to find out more about CSV syntax.
 
-After every step, the process will save your progress to a _import_autosave.json_ file. Consult the _JSON Format_ chapter to find out more about this template.  
+After every step, the process will save your progress to a _import_autosave.json_ file. This feature can be disabled by setting the `AUTOSAVE` constant to `False` in the Python file.  
+Consult the _JSON Format_ chapter to find out more about this template.  
 
 Before the import into Keeper, you will be able to rerun any of the steps in this process.
 
