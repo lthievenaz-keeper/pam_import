@@ -3,8 +3,8 @@ from rich.console import Console
 from rich.markdown import Markdown
 ## RICH Console styling ##
 
-USE_RICH = False
 DEBUG = False
+USE_RICH = False
 try:
     console = Console()
     USE_RICH = True
@@ -136,7 +136,7 @@ class Project:
         self.new_app = handle_prompt({'1':True,'2':False})
         if self.new_app:
             self.json['application']['new_build'] = True
-            self.json['application']['name'] = input('Application name :')
+            self.json['application']['name'] = input('Application name:')
         else:
             self.json['application']['new_build'] = False
             self.json['application']['name'] = input('Application name or UID: ')
@@ -224,10 +224,10 @@ class Project:
         display('# PAM Users')
         display('The User CSV should look like this:')
         display('''
-| shared_folder | folder_path       | title  | login  | password |{kwargs*}| _rotation.{kwargs*} |
-| ------------- | ----------------- | ------ | ------ | -------- | ------- | ------------------ |
-| Users         |                   | root   | user01 | pwd01    |{value*} | {value*}           |
-| Users2        | folder01/folder02 | nested | user02 | pwd02    |{value*} | {value*}           |
+| shared_folder | folder_path       | title  | login  | password | pam_config   | {kwargs*}| _rotation.{kwargs*} |
+| ------------- | ----------------- | ------ | ------ | -------- | ------------ | -------- | ------------------- |
+| Users         |                   | root   | user01 | pwd01    | $config_name | {value*} | {value*}            |
+| Users2        | folder01/folder02 | nested | user02 | pwd02    | $config_name | {value*} | {value*}            |
         ''','green')
         display('{kwargs*} are Commander arguments for the record-add command. For instance:')
         display('''
@@ -237,9 +237,9 @@ class Project:
         ''','green')
         display('_rotation{kwargs*} are Commander arguments for the pam rotation edit command. For instance:')
         display('''
-| _rotation.config        | _rotation.resource | _rotation.on-demand |
-| ----------------------- | ------------------ | ------------------- |
-| $config_name            | $resource_name     | _                   |
+| _rotation.resource | _rotation.on-demand |
+| ------------------ | ------------------- |
+| $resource_name     | _                   |
         ''','green')
         display('Caution: Use the long format for all arguments','italic red')
         display(f'Do you want to set a specific separator for folder_path (default is "{self.separator}")?', 'cyan')
@@ -259,10 +259,10 @@ class Project:
         display('# PAM Resources')
         display('The Resource CSV should look like this:')
         display('''
-| shared_folder | folder_path       | title | type         | {kwargs*} | _connection.{kwargs*}  | _rbi.{kwargs*} | _tunnel.{kwargs*} |
-| ------------- | ----------------- | ----- | ------------ | --------- | ---------------------- | -------------- | ----------------- |
-| Resources     |                   | AD01  | pamDirectory | {value*}  | {value*}               | {value*}       | {value*}          |
-| Resources2    | folder01/folder02 | SRV01 | pamMachine   | {value*}  | {value*}               | {value*}       | {value*}          |
+| shared_folder | folder_path       | title | type         | pam_config   | {kwargs*} | _connection.{kwargs*}  | _rbi.{kwargs*} | _tunnel.{kwargs*} |
+| ------------- | ----------------- | ----- | ------------ | ------------ | --------- | ---------------------- | -------------- | ----------------- |
+| Resources     |                   | AD01  | pamDirectory | $config_name | {value*}  | {value*}               | {value*}       | {value*}          |
+| Resources2    | folder01/folder02 | SRV01 | pamMachine   | $config_name | {value*}  | {value*}               | {value*}       | {value*}          |
         ''','green')
         display('Caution: Ensure shared folder names are unique from the ones in your user data','italic red')
         display('{kwargs*} are Commander arguments for the record-add command. For instance:')
@@ -273,9 +273,9 @@ class Project:
         ''','green')
         display('_connection{kwargs*}, _rbi{kwargs*} and _tunnel{kwargs*} are Commander arguments for the pam connection, rbi and tunnel edit commands. For instance:')
         display('''
-| _connection.configuration | _connection.admin-user |
-| ------------------------- | ---------------------- | 
-| $config_name             | $PAMuser_name         |
+| _connection.protocol | _connection.admin-user |
+| -------------------- | ---------------------- | 
+| rdp                  | $PAMuser_name          |
         ''','green')
         display('Caution: Use the long format for all arguments','italic red')
         display(f'Do you want to set a specific separator for folder_path (default is "{self.separator}")?', 'cyan')
@@ -655,7 +655,5 @@ class Project:
         display('# Your import has completed','bold green')
         
 Project()
-
-
 
 
