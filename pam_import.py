@@ -1,4 +1,4 @@
-## RICH Console styling ##
+## RICH Console styling - can be removed if rich was not imported ##
 from rich.console import Console
 from rich.markdown import Markdown
 ## RICH Console styling ##
@@ -655,6 +655,7 @@ class Project:
         display('# Your import has completed','bold green')
         
 Project()
+
 
 
 
