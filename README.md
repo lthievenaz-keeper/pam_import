@@ -63,7 +63,8 @@ ___
   - Record titles
 
 For items marked with *, the names must be unique across the Keeper Vault. Other items must simply be unique per project
-- The import generates a PAM configuration with all features enabled (that can be enabled with Commander). This can be edited after the import is complete
+- The import generates a PAM Configuration with all features enabled (that can be enabled with Commander). This can be edited after the import is complete
+- A bespoke shared folder is created to be the Application folder for all PAM Configurations. This can be edited after the import is complete
 - The import shares the user shared folders to your KSM app with can-edit permissions. This can be edited after the import is complete
 - Record creation and configuration inherit limitations from Commander arguments
 
