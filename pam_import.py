@@ -3,6 +3,7 @@ from rich.console import Console
 from rich.markdown import Markdown
 ## RICH Console styling ##
 
+AUTOSAVE = True
 DEBUG = False
 USE_RICH = False
 try:
@@ -84,9 +85,12 @@ class Project:
             
             
     def autosave(self):
-        with open('import_autosave.json','w') as file:
-            dump(self.json,file,indent=2)
-        display('Progress saved','italic green')
+        if AUTOSAVE:
+            with open('import_autosave.json','w') as file:
+                dump(self.json,file,indent=2)
+            display('Progress saved','italic green')
+        else:
+            display('Autosave feature disabled','italic red')
           
           
     def cli_import(self):
