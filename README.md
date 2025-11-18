@@ -1,5 +1,8 @@
 # pam_import
-Python script to import complex nested models from CSV to KeeperPAM
+Python script to import complex nested models from CSV to KeeperPAM.  
+Output of example CSVs:  
+<img width="315" height="1200" alt="Vault screenshot" src="https://github.com/user-attachments/assets/1a5beb76-c6cb-4c64-99c3-a84d241d1963" />
+
 
 ## Installation
 - Required modules:
@@ -126,3 +129,187 @@ Required columns for a RDP PAM Machine:
 | shared_folder | folder_path       | title | type         | pam_config   | pamHostname   | _connection.admin-user  | _connection.protocol |
 | ------------- | ----------------- | ----- | ------------ | ------------ | ------------- | ----------------------- | -------------------- |
 | Resources     |                   | srv1  | pamMachine   | $config_name | 10.0.0.5:3389 | $PAMuser_name           | rdp                  |
+
+___
+## JSON Format
+
+The internal Keeper import process runs from this JSON template, which handles nesting with nested dictionaries:
+
+```
+{
+  "name": "new_project",
+  "new_build": true,
+  "application": {
+    "new_build": true,
+    "name": "new_app"
+  },
+  "gateways": [
+    {
+      "name": "new_gateway",
+      "new_build": true,
+      "init_method": null
+    }
+  ],
+  "pam_config_folder": "new_project PAM configs (do not delete)",
+  "pam_configs": [
+    {
+      "name": "new_config",
+      "new_build": true,
+      "gateway": "new_gateway"
+    }
+  ],
+  "user_folders": {
+    "AD": {
+      "EU users": {
+        "content": {
+          "Dev users": {
+            "content": {
+              "Infra users": {
+                "content": {},
+                "AD_admin": {
+                  "folder_path": [
+                    "EU users",
+                    "Dev users",
+                    "Infra users"
+                  ],
+                  "title": "AD_admin",
+                  "login": "Administrator",
+                  "password": "some_strong_password",
+                  "pam_config": "$new_config",
+                  "_rotation.resource": "$AD",
+                  "_rotation.on-demand": "_",
+                  "type": "pamUser"
+                }
+              }
+            }
+          },
+          "Staff users": {
+            "content": {
+              "HR": {
+                "content": {},
+                "AD01": {
+                  "folder_path": [
+                    "EU users",
+                    "Staff users",
+                    "HR"
+                  ],
+                  "title": "AD01",
+                  "login": "demouser",
+                  "password": "some_strong_password",
+                  "pam_config": null,
+                  "_rotation.resource": null,
+                  "_rotation.on-demand": null,
+                  "type": "pamUser"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "LOCAL": {
+      "EU users": {
+        "content": {},
+        "dev1": {
+          "folder_path": [
+            "EU users"
+          ],
+          "title": "dev1",
+          "login": "user123456",
+          "password": "some_strong_password",
+          "pam_config": null,
+          "_rotation.resource": null,
+          "_rotation.on-demand": null,
+          "type": "pamUser"
+        }
+      },
+      "dev2": {
+        "folder_path": "",
+        "title": "dev2",
+        "login": "user456789",
+        "password": "some_strong_password",
+        "pam_config": null,
+        "_rotation.resource": null,
+        "_rotation.on-demand": null,
+        "type": "pamUser"
+      }
+    }
+  },
+  "resource_folders": {
+    "resources": {
+      "EU": {
+        "content": {
+          "Dev": {
+            "content": {
+              "Infra": {
+                "content": {},
+                "AD": {
+                  "folder_path": [
+                    "EU",
+                    "Dev",
+                    "Infra"
+                  ],
+                  "title": "AD",
+                  "type": "pamMachine",
+                  "pam_config": "$new_config",
+                  "pamHostname": "1.1.1.1:3389",
+                  "rbiUrl": "",
+                  "_connection.admin-user": "$AD_admin",
+                  "_connection.protocol": "rdp",
+                  "_tunnel.enable-tunneling": "_",
+                  "_rbi.remote-browser-isolation": null
+                }
+              },
+              "DevOps": {
+                "content": {},
+                "srv2": {
+                  "folder_path": [
+                    "EU",
+                    "Dev",
+                    "DevOps"
+                  ],
+                  "title": "srv2",
+                  "type": "pamDatabase",
+                  "pam_config": "$new_config",
+                  "pamHostname": "1.1.1.1:22",
+                  "rbiUrl": "",
+                  "_connection.admin-user": "$dev1",
+                  "_connection.protocol": "ssh",
+                  "_tunnel.enable-tunneling": null,
+                  "_rbi.remote-browser-isolation": null
+                }
+              }
+            }
+          }
+        },
+        "srv1": {
+          "folder_path": [
+            "EU"
+          ],
+          "title": "srv1",
+          "type": "pamMachine",
+          "pam_config": "$new_config",
+          "pamHostname": "1.1.1.1:22",
+          "rbiUrl": "",
+          "_connection.admin-user": "$dev1",
+          "_connection.protocol": "ssh",
+          "_tunnel.enable-tunneling": null,
+          "_rbi.remote-browser-isolation": null
+        }
+      },
+      "net": {
+        "folder_path": "",
+        "title": "net",
+        "type": "pamRemoteBrowser",
+        "pam_config": "$new_config",
+        "pamHostname": "",
+        "rbiUrl": "https://test.com",
+        "_connection.admin-user": "",
+        "_connection.protocol": "",
+        "_tunnel.enable-tunneling": "",
+        "_rbi.remote-browser-isolation": "on"
+      }
+    }
+  }
+}
+```
