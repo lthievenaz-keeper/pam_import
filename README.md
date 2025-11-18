@@ -149,7 +149,8 @@ Required columns for a RDP PAM Machine:
 ___
 ## JSON Format
 
-The internal Keeper import process runs from this JSON template, which handles nesting with nested dictionaries:
+The internal Keeper import process runs from the following JSON template, which handles nesting with nested dictionaries.
+Root keys in `user_folders` and `resource_folders` will be modelled as shared folders. Any object beyond that with a `content` key will be modelled as user folders. All other objects are records.
 
 ```
 {
