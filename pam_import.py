@@ -511,7 +511,7 @@ class Project:
                 display(f'Error: Could not find PAM configuration for record {record["title"]}','bold red')
                 return
             base_commands = {
-                'rotation': f'pam rotation edit -r {record["uid"]} --enable -c {record["pam_config"]} -f ',
+                'rotation': f'pam rotation edit -r {record["uid"]} -c {record["pam_config"]} -f ',
                 'connection': f'pam connection edit {record["uid"]} -cn on -c {record["pam_config"]} ',
                 'rbi': f'pam rbi edit -r {record["uid"]} -c {record["pam_config"]} ',
                 'tunnel': f'pam tunnel edit {record["uid"]} -c {record["pam_config"]} '
@@ -613,6 +613,7 @@ class Project:
                 if config_obj['record_uid'] == config['name'] or loads(config_obj['data_unencrypted'].decode('utf-8'))['title'] == config['name']:
                     debug(f'UID: {config_obj["record_uid"]}')
                     config['uid'] = config_obj['record_uid']
+                    self.records[config['name']] = {"uid":config_obj['record_uid']}
                     display('Done','italic green') 
         self.autosave()
             
