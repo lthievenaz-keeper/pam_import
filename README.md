@@ -69,7 +69,7 @@ ___
   - Record titles (unique across the project)
 
 - The import generates a Local Network PAM Configuration with all features enabled (that can be enabled with Commander). This can be edited after the import is complete
-- The import can manage IAM rotation use cases however must be run with an existing PAM setup - see [Use Cases / AD Rotation Models](Use Cases/AD Rotation Models.md) for details 
+- The import can manage IAM rotation use cases however must be run with an existing PAM setup - see [Use Cases / AD Rotation Models](https://github.com/lthievenaz-keeper/pam_import/blob/main/Use%20Cases/AD%20Rotation%20Models.md) for details 
 - A bespoke shared folder is created to be the Application folder for all PAM Configurations. This can be edited after the import is complete
 - The import shares the user shared folders to your KSM app with can-edit permissions. This can be edited after the import is complete
 - The columns that can be set for Records are limited to what arguments are available in the running version of Keeper Commander.
