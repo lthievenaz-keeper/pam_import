@@ -1,8 +1,8 @@
 # AD Rotation Models
 
 With KeeperPAM, there are two ways to model AD rotations:
-- (old) With a PAM Directory record representing the AD - documentation
-- (new) With a PAM Configuration representing the AD - documentation
+- (old) With a PAM Directory record representing the AD - [documentation]([url](https://docs.keeper.io/en/keeperpam/privileged-access-manager/password-rotation/rotation-use-cases/local-network/active-directory))
+- (new) With a PAM Configuration representing the AD - [documentation]([url](https://docs.keeper.io/en/keeperpam/privileged-access-manager/password-rotation/rotation-use-cases/active-directory))
 
 It is possible to handle AD rotations with the second model with the pam_import script, however this requires running it after setting up the PAM Configuration:
 1. Create a KeeperPAM setup including:
