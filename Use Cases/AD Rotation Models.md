@@ -18,4 +18,4 @@ It is possible to handle AD rotations with the second model with the pam_import 
 Find below the CSV format for AD users with IAM rotations set up to the PAM Configuration (here named `AD_config`):
 | shared_folder | folder_path | title  | login  | password | pam_config   | distinguishedName | _rotation.iam-aad-config | _rotation.on-demand |
 | ------------- | ----------- | ------ | ------ | -------- | ------------ | ----------------- | ------------------------ | ------------------- |
-| AD Users      |             | AD01   | user01 |          | $AD_config   | {DN*}             | $AD_confi                | _                   |
+| AD Users      |             | AD01   | user01 |          | $AD_config   | {DN*}             | $AD_config               | _                   |
