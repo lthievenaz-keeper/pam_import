@@ -60,19 +60,19 @@ ___
 ## Limitations  
 
 - Object titles should be unique. This includes:
-  - Project name*
-  - Application name*
-  - Gateway names*
-  - PAM Configuration names*
-  - Shared Folder names
-  - User Folder names
-  - Record titles
+  - Project name, if new (unique across all Vault folders)
+  - Application name (unique across all Vault Applications)
+  - Gateway names (unique across all Vault Gateways)
+  - PAM Configuration names (unique across all Vault PAM Configurations _and_ other records of the project)
+  - Shared Folder names (unique across the project)
+  - User Folder names (unique across the project)
+  - Record titles (unique across the project)
 
-For items marked with *, the names must be unique across the Keeper Vault. Other items must simply be unique per project
-- The import generates a PAM Configuration with all features enabled (that can be enabled with Commander). This can be edited after the import is complete
+- The import generates a Local Network PAM Configuration with all features enabled (that can be enabled with Commander). This can be edited after the import is complete
+- The import can manage IAM rotation use cases however must be run with an existing PAM setup - see [Use Cases / AD Rotation Models](Use Cases/AD Rotation Models.md) for details 
 - A bespoke shared folder is created to be the Application folder for all PAM Configurations. This can be edited after the import is complete
 - The import shares the user shared folders to your KSM app with can-edit permissions. This can be edited after the import is complete
-- Record creation and configuration inherit limitations from Commander arguments
+- The columns that can be set for Records are limited to what arguments are available in the running version of Keeper Commander.
 
 ## Debugging
 
