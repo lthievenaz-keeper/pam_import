@@ -1,58 +1,7 @@
-## RICH Console styling - can be removed if rich was not imported ##
-from rich.console import Console
-from rich.markdown import Markdown
-## RICH Console styling ##
+from utils import *
 
 AUTOSAVE = True
-DEBUG = False
-USE_RICH = False
-try:
-    console = Console()
-    USE_RICH = True
-except:
-    pass
-
-from json import dump,dumps,loads
-
-def display(text,style=None):
-    if USE_RICH:
-        console.print(Markdown(text),style=style)
-    else:
-        print(text)
-        
-        
-def list_items(items,style='italic yellow'):
-    for item in items:
-        display(f'- {item}',style)
-        
-        
-def handle_prompt(valid_inputs,prompt='Input: '):
-    response = input(prompt)
-    if response.lower() in valid_inputs:
-        return valid_inputs[response]
-    display('Invalid input')
-    return handle_prompt(valid_inputs,prompt=prompt) 
-
-
-def validate_file_upload(format):
-    user_file = input('File path: ')
-    try:
-        with open(user_file,'r') as file:
-            if format=='csv':
-                from csv import DictReader
-                return list(DictReader(file))
-            elif format=='json':
-                from json import load
-                return load(file)
-                
-    except Exception as e:
-        display(f'Error: Exception {e} raised','bold red')
-        return validate_file_upload(format)
-
-
-def debug(text):
-    if DEBUG:
-        print(f'>>DEBUG: {text}')
+DEBUG = True
 
 class Project:
     def __init__(self):  
@@ -65,23 +14,29 @@ class Project:
             '(1) CLI Prompts and CSV files',
             '(2) I have a completed JSON file',
             '(3) I have a partial JSON file',
-            '(4) Import connections from my KCM host (coming soon)'
+            '(4) Import connections from KCM on-prem'
         ])
-        self.import_method = handle_prompt({'1':'cli','2':'json','3':'cli_rerun'})
+        self.import_method = handle_prompt({'1':'cli','2':'json','3':'cli_rerun','4':'kcm'})
             
-        if self.import_method == 'cli':
-            self.cli_import()
+        match self.import_method:
+            case 'cli':
+                self.cli_import()
+            case 'json':
+                display('## Please upload your completed JSON file', 'cyan')
+                self.json = validate_file_upload('json')
+            case 'cli_rerun':
+                display('## Please upload your partial JSON file', 'cyan')
+                self.json = validate_file_upload('json')
+                self.rerun(False)
+            case 'kcm':
+                from kcm_import import KCM_import
+                self.json = KCM_import(self.json,DEBUG)
         
-        elif self.import_method == 'json':
-            display('## Please upload your completed JSON file', 'cyan')
-            self.json = validate_file_upload('json')
+        try:
             self.execute_import()
-        
-        elif self.import_method == 'cli_rerun':
-            display('## Please upload your partial JSON file', 'cyan')
-            self.json = validate_file_upload('json')
-            self.rerun(False)
-            self.execute_import()
+        except Exception as e:
+            display(f'Critical error: {e}','bold red')
+            self.wipe_project()
             
             
     def autosave(self):
@@ -129,9 +84,7 @@ class Project:
         
         # Summarize project and enable redo
         self.rerun()
-        
-        self.execute_import()
-        
+                
         
     def setup_KSM_app(self):
         display('# KSM application', None)
@@ -398,6 +351,7 @@ class Project:
         
     
     def execute_import(self):
+        self.errors = 0
         self.folder_uids = {}
         self.records = {}
         self.rotation_records = []
@@ -425,18 +379,22 @@ class Project:
         
         def run_command(command):
             if command.startswith('record-add'):
-                debug('Adding record')
+                debug('Adding record',DEBUG)
             else:
-                debug(f'Running command: {command}')
-            cli.do_command(params,command)
-            api.sync_down(params)
+                debug(f'Running command: {command}',DEBUG)
+            try:
+                cli.do_command(params,command)
+                api.sync_down(params)
+            except Exception as e:
+                self.errors +=1
+                display(f'Commander error: {e}','bold red')
         
         
         def list_records(folder,root):
             records = []
             for obj in folder:
                 if 'content' in folder[obj]:
-                    debug(f'Creating user folder {obj}')
+                    debug(f'Creating user folder {obj}',DEBUG)
                     uid = MKDIR.execute(
                         params,
                         folder=get_folder_path(params,self.folder_uids[root])+obj,
@@ -459,21 +417,21 @@ class Project:
             records = get_contained_record_uids(params,folder_uid)[folder_uid]
             for uid in records:
                 if api.get_record(params,uid).title == record['title']:
-                    debug(f'UID: {uid}')
+                    debug(f'UID: {uid}',DEBUG)
                     return uid
                     
                     
         def create_record(record,root):
-            debug(f'Preparing record-add for {record["title"]}')
+            debug(f'Preparing record-add for {record["title"]}',DEBUG)
             # Get folder
             folder = self.folder_uids[root]
             if isinstance(record['folder_path'],list):
                 folder = self.folder_uids[record['folder_path'][-1]]
-            debug(f'Parent folder UID: {folder}')
+            debug(f'Parent folder UID: {folder}',DEBUG)
             
             # Check args and concat command
             command = f'record-add -rt {record["type"]} -t "{record["title"]}" --folder={folder} '
-            debug('Scanning record arguments')
+            debug('Scanning record arguments',DEBUG)
             rotation,connection,rbi,tunnel = False,False,False,False
             for arg in record:
                 if arg[0] != '_' and record[arg] and arg not in ['folder_path','type','title','pam_config','uid']:
@@ -541,19 +499,19 @@ class Project:
         user_folder_uids = []
         shared_folder_uids = []
         if self.json['new_build']:
-            debug(f'Creating master folder {self.json["name"]}')
+            debug(f'Creating master folder {self.json["name"]}',DEBUG)
             run_command(f'mkdir -uf "{self.json["name"]}"')
         
         
         if self.json['new_build']:
-            debug('Creating PAM config container folder')
+            debug('Creating PAM config container folder',DEBUG)
             shared_folder_uids.append(MKDIR.execute(
                 params,
                 folder=f'{self.json["name"]}/{self.json["pam_config_folder"]}',
                 shared_folder=True
             ))
         for folder in self.json['user_folders']:
-            debug(f'Creating shared folder {folder}')
+            debug(f'Creating shared folder {folder}',DEBUG)
             uid = MKDIR.execute(
                 params,
                 folder=f'{self.json["name"]}/{folder}',
@@ -562,7 +520,7 @@ class Project:
             user_folder_uids.append(uid)
             self.folder_uids[folder] = uid
         for folder in self.json['resource_folders']:
-            debug(f'Creating shared folder {folder}')
+            debug(f'Creating shared folder {folder}',DEBUG)
             uid = MKDIR.execute(
                 params,
                 folder=f'{self.json["name"]}/{folder}',
@@ -582,14 +540,14 @@ class Project:
                 self.json['application']['uid'] = app_name
                 api.sync_down(params)
                 display('Done','italic green')
-            except:
-                display('Error creating the app','bold red')
+            except Exception as e:
+                display(f'Error creating the app: {e}','bold red')
                 return
         self.autosave()
         
-        debug('Adding user folders to app')
+        debug('Adding user folders to app',DEBUG)
         KSM.add_app_share(params, user_folder_uids,app_name, is_editable=True)
-        debug('Adding resource folders to app')
+        debug('Adding resource folders to app',DEBUG)
         KSM.add_app_share(params, shared_folder_uids,app_name, is_editable=False)
             
         for gateway in self.json['gateways']:
@@ -611,10 +569,13 @@ class Project:
                 run_command(f'pam config new -t "{config["name"]}" -env local -sf "{self.json["pam_config_folder"]}" -g "{config["gateway"]}" -c on -u on -r on -rbi on -cr on -tr on')
             for config_obj in pam_configurations_get_all(params):
                 if config_obj['record_uid'] == config['name'] or loads(config_obj['data_unencrypted'].decode('utf-8'))['title'] == config['name']:
-                    debug(f'UID: {config_obj["record_uid"]}')
+                    debug(f'UID: {config_obj["record_uid"]}',DEBUG)
                     config['uid'] = config_obj['record_uid']
                     self.records[config['name']] = {"uid":config_obj['record_uid']}
-                    display('Done','italic green') 
+            if not config['uid']:
+                display(f'Unable to find the config UID for: {config["name"]}','bold red')
+            else:
+                display('Done','italic green') 
         self.autosave()
             
         self.rotation_commands = []
@@ -667,7 +628,36 @@ class Project:
             list_items(gateway_info,'green')
         display('## Please make sure you dispose of any CSV / JSON file containing sensitive data','italic red')
         
+        if self.errors:
+            display(f'{str(self.errors)} errors detected. Do you wish to delete all created objects and start over?', 'red')
+            list_items(['(1) Yes','(2) No'])
+            if handle_prompt({'1':True,'2':False}):
+                wipe_project()
+                Project()
+                    
+        
+        def wipe_project():
+            display('Do you wish to delete all created objects?', 'red')
+            list_items(['(1) Yes','(2) No'])
+            if handle_prompt({'1':True,'2':False}):
+                display('Deleting project data...','red')
+                try:
+                    config_objs = pam_configurations_get_all(params)
+                    for config in self.json['pam_configs']:
+                        for config_obj in config_objs:
+                            if loads(config_obj['data_unencrypted'].decode('utf-8'))['title'] == config['name']:
+                                run_command(f'pam config remove {config_obj["record_uid"]}')
+                except:
+                    pass
+                try:
+                     run_command(f'sm app remove "{app_name}" -f')
+                except:
+                    pass
+                try:
+                     run_command(f'rmdir "{self.json["name"]}" -f')
+                except:
+                    pass
+            display('Data deleted','red')
+            
+            
 Project()
-
-
-
