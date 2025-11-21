@@ -36,7 +36,7 @@ class Project:
             self.execute_import()
         except Exception as e:
             display(f'Critical error: {e}','bold red')
-            self.wipe_project()
+            # wipe_project()
             
             
     def autosave(self):
@@ -661,3 +661,4 @@ class Project:
             
             
 Project()
+
