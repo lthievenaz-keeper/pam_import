@@ -599,8 +599,8 @@ class Project:
                     gateway['token'] = create_gateway(params, gateway['name'], app_name, gateway['init_method'])
                     api.sync_down(params)
                     display('Done','italic green')
-                except:
-                    display('Error creating the gateway','bold red')
+                except Exception as e:
+                    display(f'Error creating the gateway: {e}','bold red')
                     return
         self.autosave()
     
@@ -608,7 +608,7 @@ class Project:
         for config in self.json['pam_configs']:
             if config['new_build']:
                 display(f'Creating config {config["name"]}...','yellow')
-                run_command(f'pam config new -t {config["name"]} -env local -sf "{self.json["pam_config_folder"]}" -g "{config["gateway"]}" -c on -u on -r on -rbi on -cr on -tr on')
+                run_command(f'pam config new -t "{config["name"]}" -env local -sf "{self.json["pam_config_folder"]}" -g "{config["gateway"]}" -c on -u on -r on -rbi on -cr on -tr on')
             for config_obj in pam_configurations_get_all(params):
                 if config_obj['record_uid'] == config['name'] or loads(config_obj['data_unencrypted'].decode('utf-8'))['title'] == config['name']:
                     debug(f'UID: {config_obj["record_uid"]}')
@@ -668,5 +668,6 @@ class Project:
         display('## Please make sure you dispose of any CSV / JSON file containing sensitive data','italic red')
         
 Project()
+
 
 
