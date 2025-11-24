@@ -195,7 +195,7 @@ class Project:
 | ------------------ | ------------------- |
 | $resource_name     | _                   |
         ''','green')
-        display('Caution: Use the long format for all arguments','italic red')
+        display('Caution: Use the long format for all arguments','italic yellow')
         display(f'Do you want to set a specific separator for folder_path (default is "{self.separator}")?', 'cyan')
         list_items(['(1) Yes','(2) No'])
         if handle_prompt({'1':True,'2':False}):
@@ -231,7 +231,13 @@ class Project:
 | -------------------- | ---------------------- | 
 | rdp                  | $PAMuser_name          |
         ''','green')
-        display('Caution: Use the long format for all arguments','italic red')
+        display('Caution: Use the long format for all arguments','italic yellow')
+        display('Finally, advanced PAM settings (from the pamSettings object when retrieving records in Commander) can be added with _pamSettings.{kwargs*}. For instance:')
+        display('''
+| _pamSettings.connection.database | _pamSettings.portForward.reusePort |
+| -------------------------------- | ---------------------------------- | 
+| database_name                    | TRUE                               |
+        ''','green')
         display(f'Do you want to set a specific separator for folder_path (default is "{self.separator}")?', 'cyan')
         list_items(['(1) Yes','(2) No'])
         if handle_prompt({'1':True,'2':False}):
@@ -720,3 +726,4 @@ class Project:
             
             
 Project()
+
