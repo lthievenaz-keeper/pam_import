@@ -16,7 +16,7 @@ class Project:
             '(3) I have a partial JSON file',
             '(4) Import connections from KCM on-prem (coming soon)'
         ])
-        self.import_method = handle_prompt({'1':'cli','2':'json','3':'cli_rerun','4':'kcm'})
+        self.import_method = handle_prompt({'1':'cli','2':'json','3':'cli_rerun'})
             
         match self.import_method:
             case 'cli':
@@ -668,4 +668,5 @@ class Project:
             
             
 Project()
+
 
