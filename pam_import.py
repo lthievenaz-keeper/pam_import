@@ -14,7 +14,7 @@ class Project:
             '(1) CLI Prompts and CSV files',
             '(2) I have a completed JSON file',
             '(3) I have a partial JSON file',
-            '(4) Import connections from KCM on-prem'
+            '(4) Import connections from KCM on-prem (coming soon)'
         ])
         self.import_method = handle_prompt({'1':'cli','2':'json','3':'cli_rerun','4':'kcm'})
             
@@ -28,15 +28,11 @@ class Project:
                 display('## Please upload your partial JSON file', 'cyan')
                 self.json = validate_file_upload('json')
                 self.rerun(False)
-            case 'kcm':
-                from kcm_import import KCM_import
-                self.json = KCM_import(self.json,DEBUG)
+            #case 'kcm':
+             #   from kcm_import import KCM_import
+             #   self.json = KCM_import(self.json,DEBUG)
         
-        try:
-            self.execute_import()
-        except Exception as e:
-            display(f'Critical error: {e}','bold red')
-            # wipe_project()
+        self.execute_import()
             
             
     def autosave(self):
@@ -498,125 +494,130 @@ class Project:
         display('Creating vault folders...','yellow')
         user_folder_uids = []
         shared_folder_uids = []
-        if self.json['new_build']:
-            debug(f'Creating master folder {self.json["name"]}',DEBUG)
-            run_command(f'mkdir -uf "{self.json["name"]}"')
-        
-        
-        if self.json['new_build']:
-            debug('Creating PAM config container folder',DEBUG)
-            shared_folder_uids.append(MKDIR.execute(
-                params,
-                folder=f'{self.json["name"]}/{self.json["pam_config_folder"]}',
-                shared_folder=True
-            ))
-        for folder in self.json['user_folders']:
-            debug(f'Creating shared folder {folder}',DEBUG)
-            uid = MKDIR.execute(
-                params,
-                folder=f'{self.json["name"]}/{folder}',
-                shared_folder=True
-            )
-            user_folder_uids.append(uid)
-            self.folder_uids[folder] = uid
-        for folder in self.json['resource_folders']:
-            debug(f'Creating shared folder {folder}',DEBUG)
-            uid = MKDIR.execute(
-                params,
-                folder=f'{self.json["name"]}/{folder}',
-                shared_folder=True
-            )
-            shared_folder_uids.append(uid)
-            self.folder_uids[folder] = uid
-        api.sync_down(params)
-        display('Done','italic green')
-        
-        app_name = self.json['application']['name']
-        if self.json['application']['new_build']:
-            display('Creating the KSM app...','yellow')
-            app_json = KSM.add_new_v5_app(params, app_name, force_to_add=False, format_type='json')
-            try:
-                app_name = loads(app_json)['app_uid']
-                self.json['application']['uid'] = app_name
-                api.sync_down(params)
-                display('Done','italic green')
-            except Exception as e:
-                display(f'Error creating the app: {e}','bold red')
-                return
-        self.autosave()
-        
-        debug('Adding user folders to app',DEBUG)
-        KSM.add_app_share(params, user_folder_uids,app_name, is_editable=True)
-        debug('Adding resource folders to app',DEBUG)
-        KSM.add_app_share(params, shared_folder_uids,app_name, is_editable=False)
+
+        try:
+            if self.json['new_build']:
+                debug(f'Creating master folder {self.json["name"]}',DEBUG)
+                run_command(f'mkdir -uf "{self.json["name"]}"')
             
-        for gateway in self.json['gateways']:
-            if gateway['new_build']:
-                display(f'Creating gateway {gateway["name"]}...','yellow')
+            
+            if self.json['new_build']:
+                debug('Creating PAM config container folder',DEBUG)
+                shared_folder_uids.append(MKDIR.execute(
+                    params,
+                    folder=f'{self.json["name"]}/{self.json["pam_config_folder"]}',
+                    shared_folder=True
+                ))
+            for folder in self.json['user_folders']:
+                debug(f'Creating shared folder {folder}',DEBUG)
+                uid = MKDIR.execute(
+                    params,
+                    folder=f'{self.json["name"]}/{folder}',
+                    shared_folder=True
+                )
+                user_folder_uids.append(uid)
+                self.folder_uids[folder] = uid
+            for folder in self.json['resource_folders']:
+                debug(f'Creating shared folder {folder}',DEBUG)
+                uid = MKDIR.execute(
+                    params,
+                    folder=f'{self.json["name"]}/{folder}',
+                    shared_folder=True
+                )
+                shared_folder_uids.append(uid)
+                self.folder_uids[folder] = uid
+            api.sync_down(params)
+            display('Done','italic green')
+            
+            app_name = self.json['application']['name']
+            if self.json['application']['new_build']:
+                display('Creating the KSM app...','yellow')
+                app_json = KSM.add_new_v5_app(params, app_name, force_to_add=False, format_type='json')
                 try:
-                    gateway['token'] = create_gateway(params, gateway['name'], app_name, gateway['init_method'])
+                    app_name = loads(app_json)['app_uid']
+                    self.json['application']['uid'] = app_name
                     api.sync_down(params)
                     display('Done','italic green')
                 except Exception as e:
-                    display(f'Error creating the gateway: {e}','bold red')
+                    display(f'Error creating the app: {e}','bold red')
                     return
-        self.autosave()
-    
-        
-        for config in self.json['pam_configs']:
-            if config['new_build']:
-                display(f'Creating config {config["name"]}...','yellow')
-                run_command(f'pam config new -t "{config["name"]}" -env local -sf "{self.json["pam_config_folder"]}" -g "{config["gateway"]}" -c on -u on -r on -rbi on -cr on -tr on')
-            for config_obj in pam_configurations_get_all(params):
-                if config_obj['record_uid'] == config['name'] or loads(config_obj['data_unencrypted'].decode('utf-8'))['title'] == config['name']:
-                    debug(f'UID: {config_obj["record_uid"]}',DEBUG)
-                    config['uid'] = config_obj['record_uid']
-                    self.records[config['name']] = {"uid":config_obj['record_uid']}
-            if not config['uid']:
-                display(f'Unable to find the config UID for: {config["name"]}','bold red')
-            else:
-                display('Done','italic green') 
-        self.autosave()
+            self.autosave()
             
-        self.rotation_commands = []
-        self.connection_commands = []
-        self.rbi_commands = []
-        self.tunnel_commands = []
-        display('Creating PAM User Records...','yellow')
-        for folder in self.json['user_folders']:
-            for record in list_records(self.json['user_folders'][folder],folder):
-                if record:
-                    record['uid'] = create_record(record,folder)
-                    self.records[record['title']] = record
-        display('Done','italic green')
-        self.autosave()
+            debug('Adding user folders to app',DEBUG)
+            KSM.add_app_share(params, user_folder_uids,app_name, is_editable=True)
+            debug('Adding resource folders to app',DEBUG)
+            KSM.add_app_share(params, shared_folder_uids,app_name, is_editable=False)
+                
+            for gateway in self.json['gateways']:
+                if gateway['new_build']:
+                    display(f'Creating gateway {gateway["name"]}...','yellow')
+                    try:
+                        gateway['token'] = create_gateway(params, gateway['name'], app_name, gateway['init_method'])
+                        api.sync_down(params)
+                        display('Done','italic green')
+                    except Exception as e:
+                        display(f'Error creating the gateway: {e}','bold red')
+                        return
+            self.autosave()
         
-        
-        display('Creating PAM Resource Records...','yellow')
-        for folder in self.json['resource_folders']:
-            for record in list_records(self.json['resource_folders'][folder],folder):
-                if record:
-                    record['uid'] = create_record(record,folder)
-                    self.records[record['title']] = record
-        display('Done','italic green')
-        self.autosave()
-        
-        if self.connection_records:
-            display('Handling Connection Records...','yellow')
-            for record in self.connection_records:
-                update_record(record,'connection')
-        if self.rotation_records:
-            display('Handling Rotation Records...','yellow')
-            for record in self.rotation_records:
-                update_record(record,'rotation')
-        if self.rbi_records:
-            display('Handling RBI Records...','yellow')
-            for record in self.rbi_records:
-                update_record(record,'rbi')
-        if self.tunnel_records:
-            display('Handling Tunnel Records...','yellow')
-            for record in self.tunnel_records:
-                update_record(record,'tunnel')
+            
+            for config in self.json['pam_configs']:
+                if config['new_build']:
+                    display(f'Creating config {config["name"]}...','yellow')
+                    run_command(f'pam config new -t "{config["name"]}" -env local -sf "{self.json["pam_config_folder"]}" -g "{config["gateway"]}" -c on -u on -r on -rbi on -cr on -tr on')
+                for config_obj in pam_configurations_get_all(params):
+                    if config_obj['record_uid'] == config['name'] or loads(config_obj['data_unencrypted'].decode('utf-8'))['title'] == config['name']:
+                        debug(f'UID: {config_obj["record_uid"]}',DEBUG)
+                        config['uid'] = config_obj['record_uid']
+                        self.records[config['name']] = {"uid":config_obj['record_uid']}
+                if not config['uid']:
+                    display(f'Unable to find the config UID for: {config["name"]}','bold red')
+                else:
+                    display('Done','italic green') 
+            self.autosave()
+                
+            self.rotation_commands = []
+            self.connection_commands = []
+            self.rbi_commands = []
+            self.tunnel_commands = []
+            display('Creating PAM User Records...','yellow')
+            for folder in self.json['user_folders']:
+                for record in list_records(self.json['user_folders'][folder],folder):
+                    if record:
+                        record['uid'] = create_record(record,folder)
+                        self.records[record['title']] = record
+            display('Done','italic green')
+            self.autosave()
+            
+            
+            display('Creating PAM Resource Records...','yellow')
+            for folder in self.json['resource_folders']:
+                for record in list_records(self.json['resource_folders'][folder],folder):
+                    if record:
+                        record['uid'] = create_record(record,folder)
+                        self.records[record['title']] = record
+            display('Done','italic green')
+            self.autosave()
+            
+            if self.connection_records:
+                display('Handling Connection Records...','yellow')
+                for record in self.connection_records:
+                    update_record(record,'connection')
+            if self.rotation_records:
+                display('Handling Rotation Records...','yellow')
+                for record in self.rotation_records:
+                    update_record(record,'rotation')
+            if self.rbi_records:
+                display('Handling RBI Records...','yellow')
+                for record in self.rbi_records:
+                    update_record(record,'rbi')
+            if self.tunnel_records:
+                display('Handling Tunnel Records...','yellow')
+                for record in self.tunnel_records:
+                    update_record(record,'tunnel')
+        except Exception as e:
+            display(f'Critical error: {e}','bold red')
+            wipe_project()
         
         display('# Your import has completed','bold green')
         gateway_info = []
@@ -661,4 +662,5 @@ class Project:
             
             
 Project()
+
 
