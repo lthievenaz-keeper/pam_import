@@ -138,6 +138,40 @@ ___
 - For Commander flags that don't expect a value, use `_`
 - All Commander arguments should use the long form (e.g. `_connection.protocol` and not `_connection.p`)
 
+### PAM Settings
+
+Advanced properties of PAM connections can be found within a `pamSettings` or `pamRemoteBrowserSettings` object:  
+
+```
+{
+  "type": "pamRemoteBrowserSettings",
+  "value": [{
+      "connection": {
+        "recordingIncludeKeys": true,
+        "allowUrlManipulation": true,
+        "ignoreInitialSslCert": true,
+      }
+    }
+  ]
+}
+{
+  "type": "pamSettings",
+  "value": [{
+      "connection": {
+        "database": "database_name",
+      }
+      "portForward: {
+        "reusePort": true
+      }
+    }
+  ]
+}
+```
+These can be set using the `_pamSettings.{kwargs*}` syntax:  
+| _pamSettings.connection.database | _pamSettings.portForward.reusePort |
+| -------------------------------- | ---------------------------------- | 
+| database_name                    | TRUE                               |
+
 Required columns for a RDP PAM Machine:
 
 | shared_folder | folder_path       | title | type         | pam_config   | pamHostname   | _connection.admin-user  | _connection.protocol |
