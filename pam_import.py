@@ -16,12 +16,13 @@ class Project:
             '(3) I have a partial JSON file',
             '(4) Import connections from KCM on-prem (coming soon)'
         ])
-        self.import_method = handle_prompt({'1':'cli','2':'json','3':'cli_rerun'})
+        self.import_method = handle_prompt({'1':'cli','2':'json','3':'cli_rerun','4':'kcm'})
             
         match self.import_method:
             case 'cli':
                 self.cli_import()
             case 'json':
+                display("Caution: if you are using an autosave file that has gone through the import process already and PAM config names have been replaced by an UID, this would return errors if the PAM config has been deleted",'italic red')
                 display('## Please upload your completed JSON file', 'cyan')
                 self.json = validate_file_upload('json')
             case 'cli_rerun':
@@ -354,6 +355,7 @@ class Project:
         self.connection_records = []
         self.rbi_records = []
         self.tunnel_records = []
+        self.advanced_records = []
         display('# Commander Sign In')
         from keepercommander.params import KeeperParams
         from keepercommander.commands.ksm import KSMCommand
@@ -373,14 +375,15 @@ class Project:
         display('Commander login successful','italic green')
         
         
-        def run_command(command):
+        def run_command(command,sync=True):
             if command.startswith('record-add'):
                 debug('Adding record',DEBUG)
             else:
                 debug(f'Running command: {command}',DEBUG)
             try:
                 cli.do_command(params,command)
-                api.sync_down(params)
+                if sync:
+                    api.sync_down(params)
             except Exception as e:
                 self.errors +=1
                 display(f'Commander error: {e}','bold red')
@@ -428,7 +431,7 @@ class Project:
             # Check args and concat command
             command = f'record-add -rt {record["type"]} -t "{record["title"]}" --folder={folder} '
             debug('Scanning record arguments',DEBUG)
-            rotation,connection,rbi,tunnel = False,False,False,False
+            pamSettings,rotation,connection,rbi,tunnel = False,False,False,False,False
             for arg in record:
                 if arg[0] != '_' and record[arg] and arg not in ['folder_path','type','title','pam_config','uid']:
                     command += f'{arg}="{record[arg]}" '
@@ -438,12 +441,15 @@ class Project:
                             record['pam_config'] = config['uid']
                 if record[arg] and arg.startswith('_rotation.'):
                     rotation = True
+                elif record[arg] and arg.startswith('_pamSettings.'):
+                    pamSettings = True
                 elif record[arg] and arg.startswith('_connection.'):
                     connection = True
                 elif record[arg] and arg.startswith('_rbi.'):
                     rbi = True
-                if record[arg] and arg.startswith('_tunnel.'):
+                elif record[arg] and arg.startswith('_tunnel.'):
                     tunnel = True
+            
             if rotation:
                 self.rotation_records.append(record)
             elif connection:
@@ -452,10 +458,13 @@ class Project:
                 self.rbi_records.append(record)
             if tunnel:
                 self.tunnel_records.append(record)
+            if pamSettings:
+                uid = create_advanced_record(record,folder,command)
+                if uid is not None:
+                    return uid
                 
             # Create the record
-            run_command(command)
-            api.sync_down(params)
+            run_command(command,False)
             uid = get_uid(record,folder)
             return uid
               
@@ -487,6 +496,46 @@ class Project:
             # Check if command has changed
             if result_command != base_commands[action]:
                 run_command(result_command)
+                
+                
+        def create_advanced_record(record,folder,command):
+            from keepercommander.commands.recordv3 import RecordAddCommand
+            from json import dumps
+            
+            pam_settings = {
+                    'connection':{},
+                    'portForward':{}
+            }
+            for arg in record:
+                if record[arg] == 'TRUE':
+                    record[arg] = True
+                elif record[arg] == 'FALSE':
+                    record[arg] = False
+                if record[arg] and arg.startswith('_pamSettings.'):
+                    argument = arg[len('_pamSettings'):].split('.')
+                    try:
+                        pam_settings[argument[1]][argument[2]] = record[arg]
+                    except:
+                        display(f'Error: unable to parse argument {arg} on record {record["title"]} - ignoring pamSettings','bold red')
+                        self.errors += 1
+            record_add = {
+                "type": record['type'],
+                "title": record['title'],
+                "fields": [
+                    {"type": "pamSettings", "value": [pam_settings]}
+                ]}
+            uid = None
+            try:
+                uid = RecordAddCommand().execute(params,folder=folder,data=dumps(record_add))
+                api.sync_down(params)
+                debug(f'Successfully set up PAM settings on record {uid}',DEBUG)
+                update_command = f'record-update -r {uid} {command.split(folder)[1]}'
+                run_command(update_command)
+            except:
+                display(f'Error: unable to create record {record["title"]} with pamSettings - ignoring pamSettings','bold red')
+                self.errors += 1
+            
+            return uid
                 
                 
         def wipe_project():
@@ -598,16 +647,14 @@ class Project:
                     display('Done','italic green') 
             self.autosave()
                 
-            self.rotation_commands = []
-            self.connection_commands = []
-            self.rbi_commands = []
-            self.tunnel_commands = []
+                
             display('Creating PAM User Records...','yellow')
             for folder in self.json['user_folders']:
                 for record in list_records(self.json['user_folders'][folder],folder):
                     if record:
                         record['uid'] = create_record(record,folder)
                         self.records[record['title']] = record
+            api.sync_down(params)
             display('Done','italic green')
             self.autosave()
             
@@ -618,6 +665,7 @@ class Project:
                     if record:
                         record['uid'] = create_record(record,folder)
                         self.records[record['title']] = record
+            api.sync_down(params)
             display('Done','italic green')
             self.autosave()
             
@@ -637,6 +685,10 @@ class Project:
                 display('Handling Tunnel Records...','yellow')
                 for record in self.tunnel_records:
                     update_record(record,'tunnel')
+            if self.advanced_records:
+                display('Handling Advanced PAM settings...','yellow')
+                for record in self.tunnel_records:
+                    advanced_update(record)
         except Exception as e:
             display(f'Critical error: {e}','bold red')
             self.errors +=1
@@ -668,5 +720,3 @@ class Project:
             
             
 Project()
-
-
