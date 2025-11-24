@@ -138,6 +138,14 @@ ___
 - For Commander flags that don't expect a value, use `_`
 - All Commander arguments should use the long form (e.g. `_connection.protocol` and not `_connection.p`)
 
+Required columns for a RDP PAM Machine:
+
+| shared_folder | folder_path       | title | type         | pam_config   | pamHostname   | _connection.admin-user  | _connection.protocol |
+| ------------- | ----------------- | ----- | ------------ | ------------ | ------------- | ----------------------- | -------------------- |
+| Resources     |                   | srv1  | pamMachine   | $config_name | 10.0.0.5:3389 | $PAMuser_name           | rdp                  |
+
+(You do not need to set `configuration` or `config` as a flag - it is set automatically from the `pam_config` column)
+
 ### PAM Settings
 
 Advanced properties of PAM connections can be found within a `pamSettings` or `pamRemoteBrowserSettings` object:  
@@ -171,14 +179,6 @@ These can be set using the `_pamSettings.{kwargs*}` syntax:
 | _pamSettings.connection.database | _pamSettings.portForward.reusePort |
 | -------------------------------- | ---------------------------------- | 
 | database_name                    | TRUE                               |
-
-Required columns for a RDP PAM Machine:
-
-| shared_folder | folder_path       | title | type         | pam_config   | pamHostname   | _connection.admin-user  | _connection.protocol |
-| ------------- | ----------------- | ----- | ------------ | ------------ | ------------- | ----------------------- | -------------------- |
-| Resources     |                   | srv1  | pamMachine   | $config_name | 10.0.0.5:3389 | $PAMuser_name           | rdp                  |
-
-(You do not need to set `configuration` or `config` as a flag - it is set automatically from the `pam_config` column)
 
 ___
 ## JSON Format
