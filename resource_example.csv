@@ -1,5 +1,5 @@
-shared_folder,folder_path,title,type,pam_config,pamHostname,rbiUrl,_connection.admin-user,_connection.protocol,_tunnel.enable-tunneling,_rbi.remote-browser-isolation
-resources,EU/Dev/Infra,AD,pamMachine,$new_config,1.1.1.1:3389,,$AD_admin,rdp,_
-resources,EU/Dev/DevOps,srv2,pamDatabase,$new_config,1.1.1.1:22,,$dev1,ssh
-resources,EU,srv1,pamMachine,$new_config,1.1.1.1:22,,$dev1,ssh
-resources,,net,pamRemoteBrowser,$new_config,,https://test.com,,,,on
+shared_folder,folder_path,title,type,pam_config,pamHostname,rbiUrl,_connection.admin-user,_connection.protocol,_tunnel.enable-tunneling,_rbi.remote-browser-isolation,_pamSettings.connection.database,_pamSettings.portForward.reusePort
+resources,EU/Dev/Infra,AD,pamMachine,$new_config,1.1.1.1:3389,,$AD_admin,rdp,_,,,TRUE
+resources,EU/Dev/DevOps,srv2,pamDatabase,$new_config,1.1.1.1:22,,$dev1,ssh,,,example-database,
+resources,EU,srv1,pamMachine,$new_config,1.1.1.1:22,,$dev1,ssh,,,,
+resources,,net,pamRemoteBrowser,$new_config,,https://test.com,,,,on,,
