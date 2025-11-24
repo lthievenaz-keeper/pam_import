@@ -1,5 +1,5 @@
 shared_folder,folder_path,title,login,password,pam_config,_rotation.resource,_rotation.on-demand
 AD,EU users/Dev users/Infra users,AD_admin,Administrator,some_strong_password,$new_config,$AD,_
-AD,EU users/Staff users/HR,AD01,demouser,some_strong_password
-LOCAL,EU users,dev1,user123456,some_strong_password
-LOCAL,,dev2,user456789,some_strong_password
+AD,EU users/Staff users/HR,AD01,demouser,some_strong_password,,,
+LOCAL,EU users,dev1,user123456,some_strong_password,,,
+LOCAL,,dev2,user456789,some_strong_password,,,
