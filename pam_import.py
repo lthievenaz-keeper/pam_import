@@ -487,6 +487,30 @@ class Project:
             # Check if command has changed
             if result_command != base_commands[action]:
                 run_command(result_command)
+                
+                
+        def wipe_project():
+            display('Do you wish to delete all created objects?', 'red')
+            list_items(['(1) Yes','(2) No'])
+            if handle_prompt({'1':True,'2':False}):
+                display('Deleting project data...','red')
+                try:
+                    config_objs = pam_configurations_get_all(params)
+                    for config in self.json['pam_configs']:
+                        for config_obj in config_objs:
+                            if loads(config_obj['data_unencrypted'].decode('utf-8'))['title'] == config['name']:
+                                run_command(f'pam config remove {config_obj["record_uid"]}')
+                except:
+                    pass
+                try:
+                     run_command(f'sm app remove "{app_name}" -f')
+                except:
+                    pass
+                try:
+                     run_command(f'rmdir "{self.json["name"]}" -f')
+                except:
+                    pass
+            display('Data deleted','red')
             
             
         display('# Import','bold yellow')
@@ -540,7 +564,6 @@ class Project:
                     display('Done','italic green')
                 except Exception as e:
                     display(f'Error creating the app: {e}','bold red')
-                    return
             self.autosave()
             
             debug('Adding user folders to app',DEBUG)
@@ -556,8 +579,7 @@ class Project:
                         api.sync_down(params)
                         display('Done','italic green')
                     except Exception as e:
-                        display(f'Error creating the gateway: {e}','bold red')
-                        return
+                        raise Exception(f'Error creating the gateway: {e}')
             self.autosave()
         
             
@@ -571,7 +593,7 @@ class Project:
                         config['uid'] = config_obj['record_uid']
                         self.records[config['name']] = {"uid":config_obj['record_uid']}
                 if not config['uid']:
-                    display(f'Unable to find the config UID for: {config["name"]}','bold red')
+                    raise Exception(f'Unable to find the config UID for: {config["name"]}')
                 else:
                     display('Done','italic green') 
             self.autosave()
@@ -617,50 +639,33 @@ class Project:
                     update_record(record,'tunnel')
         except Exception as e:
             display(f'Critical error: {e}','bold red')
+            self.errors +=1
             wipe_project()
         
-        display('# Your import has completed','bold green')
-        gateway_info = []
-        for gateway in self.json['gateways']:
-            if gateway['new_build'] and gateway['token']:
-                gateway_info.append(f'{gateway["name"]}: {gateway["token"]}')
-        if gateway_info:
-            display('## Gateway initialization information:','green')
-            list_items(gateway_info,'green')
-        display('## Please make sure you dispose of any CSV / JSON file containing sensitive data','italic red')
+        
+        def complete_import():
+            display('# Your import has completed','bold green')
+            gateway_info = []
+            for gateway in self.json['gateways']:
+                if gateway['new_build'] and gateway['token']:
+                    gateway_info.append(f'{gateway["name"]}: {gateway["token"]}')
+            if gateway_info:
+                display('## Gateway initialization information:','green')
+                list_items(gateway_info,'green')
+            display('## Please make sure you dispose of any CSV / JSON file containing sensitive data','italic red')
+        
         
         if self.errors:
             display(f'{str(self.errors)} errors detected. Do you wish to delete all created objects and start over?', 'red')
             list_items(['(1) Yes','(2) No'])
             if handle_prompt({'1':True,'2':False}):
                 wipe_project()
-                Project()
-                    
-        
-        def wipe_project():
-            display('Do you wish to delete all created objects?', 'red')
-            list_items(['(1) Yes','(2) No'])
-            if handle_prompt({'1':True,'2':False}):
-                display('Deleting project data...','red')
-                try:
-                    config_objs = pam_configurations_get_all(params)
-                    for config in self.json['pam_configs']:
-                        for config_obj in config_objs:
-                            if loads(config_obj['data_unencrypted'].decode('utf-8'))['title'] == config['name']:
-                                run_command(f'pam config remove {config_obj["record_uid"]}')
-                except:
-                    pass
-                try:
-                     run_command(f'sm app remove "{app_name}" -f')
-                except:
-                    pass
-                try:
-                     run_command(f'rmdir "{self.json["name"]}" -f')
-                except:
-                    pass
-            display('Data deleted','red')
+                Project()    
+            else:            
+                complete_import()
+        else:
+            complete_import()
             
             
 Project()
-
 
