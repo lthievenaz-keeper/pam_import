@@ -1,4 +1,4 @@
-# kcm_import WIP
+# kcm_import
 
 ## Requirements
 
