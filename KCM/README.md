@@ -25,6 +25,7 @@ open the ports on docker-compose
 
 ## Limitations
 
+-dynamic tokens  
 -sftp
 
 
