@@ -40,6 +40,9 @@ If you've completed the _CLI Prompts and CSV Files_ already, or if you created y
 ### 3. Partial JSON File
 If you would like to resume from an autosave file, or have a partially completed JSON template, you can use this method to skip to specific steps in the CLI import.
 
+### 4. KCM On-prem Import  
+See the dedicated KCM README in /KCM.
+
 ___
 ## Capabilities
 
