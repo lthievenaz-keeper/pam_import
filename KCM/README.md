@@ -13,7 +13,7 @@ pip install mysql-connector
 ```
 - To extract data from a PostgreSQL / Guacamole-postgresql database, import `psycopg2`:
 ```
-pip install psycopg2
+pip install psycopg2-binary
 ```
 
 ## Usage
