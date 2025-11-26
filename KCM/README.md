@@ -5,7 +5,7 @@
 All module requirements are conditional:  
 - To read database connection arguments from your `docker-compose.yml` file, import `pyYAML`:
 ```
-pip install pamYAML
+pip install pyYAML
 ```
 - To extract data from a MySQL / Guacamole-mysql database, import `mysql-connector`:
 ```
