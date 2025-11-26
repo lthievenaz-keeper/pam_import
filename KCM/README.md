@@ -1,4 +1,4 @@
-# kcm_import
+# kcm_import WIP
 
 ## Requirements
 
@@ -18,6 +18,7 @@ pip install psycopg2
 
 ## Usage
 
+open the ports on docker-compose
 
 ## Capabilities
 
