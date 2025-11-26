@@ -72,7 +72,7 @@ class KCM_import:
         # Collect import method
         display('What database are you running on KCM?', 'cyan')
         list_items(['(1) MySQL','(2) PostgreSQL (coming soon)'])
-        self.database = handle_prompt({'1':'MYSQL'})
+        self.database = handle_prompt({'1':'MYSQL','2':'POSTGRES'})
         
         self.collect_db_config()
         
@@ -161,9 +161,9 @@ class KCM_import:
     def connect_to_db(self):
         if self.database == 'MYSQL':
             try:
-                import mysql.connector
+                from mysql.connector import connect
                 debug('Attempting connection to database',self.debug)
-                conn = mysql.connector.connect(**self.db_config)
+                conn = connect(**self.db_config)
                 cursor = conn.cursor(dictionary=True)
                 
                 display('Database connection successful. Extracting data...','italic green')
@@ -181,18 +181,42 @@ class KCM_import:
                 return True
                 
             except mysql.connector.Error as e:
-                display(f'Mysql-connector error: {e}','bold red')
+                display(f'MYSQL connector error: {e}','bold red')
                 return False
                 
         elif self.database == 'POSTGRES':
-            return False
+            try:
+                from psycopg2 import connect
+                from psycopg2.extras import RealDictCursor
+                debug('Attempting connection to database',self.debug)
+                conn = connect(**self.db_config)
+                cursor = conn.cursor(cursor_factory=RealDictCursor)
+                
+                display('Database connection successful. Extracting data...','italic green')
+                
+                debug('Extracting connection group data',self.debug)
+                cursor.execute(SQL['groups'])
+                group_rows = cursor.fetchall()
+                self.group_data = [dict(row) for row in group_rows]
+                
+                debug('Extracting connection data',self.debug)
+                cursor.execute(SQL['connections'])
+                connection_rows = cursor.fetchall()
+                self.connection_data = [dict(row) for row in connection_rows]
+                
+                display('Done','italic green')
+                
+                return True
+            except:    
+                display(f'POSTGRESQL connector error: {e}','bold red')
+                return False
 
     def generate_data(self):
         display('Do you want to apply a specific PAM Configuration name to all resources?','cyan')
         display('If not, you will have the option to export your resources to CSV before the full import','yellow')
         list_items(['(1) Yes','(2) No'])
         if handle_prompt({'1':True,'2':False}):
-            self.pam_config = input('PAM Configuration name: ')
+            self.pam_config = '$'+input('PAM Configuration name: ')
         display('By default, this import will keep the Connection Group nesting you have set in KCM, but any Group with a KSM config will be modelled as a root shared folder', 'yellow')
         display('What handling do you want to apply to Connection Groups?','cyan')
         list_items([
