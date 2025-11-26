@@ -6,6 +6,7 @@ DEBUG = True
 class Project:
     def __init__(self):  
         self.separator = '/'
+        self.errors = 0
         
         display('# Welcome to the PAM Import','bold yellow')
         # Collect import method
@@ -14,7 +15,7 @@ class Project:
             '(1) CLI Prompts and CSV files',
             '(2) I have a completed JSON file',
             '(3) I have a partial JSON file',
-            '(4) Import connections from KCM on-prem (coming soon)'
+            '(4) Import connections from KCM on-prem'
         ])
         self.import_method = handle_prompt({'1':'cli','2':'json','3':'cli_rerun','4':'kcm'})
             
@@ -29,10 +30,15 @@ class Project:
                 display('## Please upload your partial JSON file', 'cyan')
                 self.json = validate_file_upload('json')
                 self.rerun(False)
-            #case 'kcm':
-             #   from kcm_import import KCM_import
-             #   self.json = KCM_import(self.json,DEBUG)
-        
+            case 'kcm':
+                from KCM.kcm_import import KCM_import
+                KCM = KCM_import(DEBUG)
+                if not KCM.completed or not KCM.to_import:
+                    return
+                elif KCM.completed and KCM.to_import:
+                    self.kcm_user_data,self.kcm_resource_data = KCM.user_records,KCM.resource_records
+                    self.cli_import(kcm=True)
+            
         self.execute_import()
             
             
@@ -45,7 +51,7 @@ class Project:
             display('Autosave feature disabled','italic red')
           
           
-    def cli_import(self):
+    def cli_import(self,kcm=False):
         display('Are you creating a new project?', 'cyan')
         display('This will define the parent folder where all PAM records are created.')
         list_items(['(1) Yes','(2) No'])
@@ -75,9 +81,17 @@ class Project:
         
         self.setup_configs()
         
-        self.collect_users()
-        
-        self.collect_resources()
+        if kcm:
+            display('Populating KCM data...')
+            self.generate_folders(self.kcm_user_data,'user_folders')
+            self.generate_content(self.kcm_user_data,'user_folders')
+            self.generate_folders(self.kcm_resource_data,'resource_folders')
+            self.generate_content(self.kcm_resource_data,'resource_folders')
+            self.autosave()
+            display('Done','italic green')
+        else:
+            self.collect_users()
+            self.collect_resources()
         
         # Summarize project and enable redo
         self.rerun()
@@ -257,13 +271,16 @@ class Project:
         
         for index, row in enumerate(csv_data):
             if not row['shared_folder']:
-                display(f'Error on row {str(index+1)}: No assigned shared folder','bold red')
+                raise Exception(f'Error on row {str(index+1)}: No assigned shared folder')
+                self.errors += 1
             elif row['shared_folder'] not in shared_folders:
-                # Create shared folder dicts
                 shared_folders[row['shared_folder']] = {}
             if row['folder_path'] and row['folder_path'].split(self.separator) not in user_folders:
                 array = [row['shared_folder']] + row['folder_path'].split(self.separator)
                 user_folders.append(array)
+            # Root shared folder
+            elif not row['folder_path'] and row['shared_folder'] not in user_folders:
+                user_folders.append([row['shared_folder']])
                 
         # Extract user folders into nested dict
         dict = {}
@@ -354,7 +371,6 @@ class Project:
         
     
     def execute_import(self):
-        self.errors = 0
         self.folder_uids = {}
         self.records = {}
         self.rotation_records = []
@@ -507,10 +523,10 @@ class Project:
         def create_advanced_record(record,folder,command):
             from keepercommander.commands.recordv3 import RecordAddCommand
             from json import dumps
-            
+            settings = 'pamRemoteBrowserSettings' if record['type']=='pamRemoteBrowser' else 'pamSettings'
             pam_settings = {
                     'connection':{},
-                    'portForward':{}
+                    'portForward':{},
             }
             for arg in record:
                 if record[arg] == 'TRUE':
@@ -520,6 +536,8 @@ class Project:
                 if record[arg] and arg.startswith('_pamSettings.'):
                     argument = arg[len('_pamSettings'):].split('.')
                     try:
+                        if argument[1] not in pam_settings:
+                            pam_settings[argument[1]] = {}
                         pam_settings[argument[1]][argument[2]] = record[arg]
                     except:
                         display(f'Error: unable to parse argument {arg} on record {record["title"]} - ignoring pamSettings','bold red')
@@ -528,7 +546,7 @@ class Project:
                 "type": record['type'],
                 "title": record['title'],
                 "fields": [
-                    {"type": "pamSettings", "value": [pam_settings]}
+                    {"type": settings, "value": [pam_settings]}
                 ]}
             uid = None
             try:
