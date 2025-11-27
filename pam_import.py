@@ -384,7 +384,9 @@ class Project:
         from keepercommander.commands.folder import FolderMakeCommand,get_folder_path,get_contained_record_uids
         from keepercommander.commands.pam.gateway_helper import create_gateway
         from keepercommander.commands.pam.config_helper import pam_configurations_get_all
+        from keepercommander.commands.recordv3 import RecordAddCommand
         from keepercommander import api, cli
+        from json import dumps
         # classes
         params = KeeperParams()
         KSM = KSMCommand()
@@ -521,8 +523,6 @@ class Project:
                 
                 
         def create_advanced_record(record,folder,command):
-            from keepercommander.commands.recordv3 import RecordAddCommand
-            from json import dumps
             settings = 'pamRemoteBrowserSettings' if record['type']=='pamRemoteBrowser' else 'pamSettings'
             pam_settings = {
                     'connection':{},
@@ -593,18 +593,28 @@ class Project:
         shared_folder_uids = []
 
         try:
+            # Root user folder
             if self.json['new_build']:
                 debug(f'Creating master folder {self.json["name"]}',DEBUG)
                 run_command(f'mkdir -uf "{self.json["name"]}"')
             
-            
-            if self.json['new_build']:
+            # Config application folder
+            create_folder = False
+            for config in self.json['pam_configs']:
+                if config['new_build']:
+                    create_folder = True
+            if create_folder:
                 debug('Creating PAM config container folder',DEBUG)
-                shared_folder_uids.append(MKDIR.execute(
+                uid = MKDIR.execute(
                     params,
                     folder=f'{self.json["name"]}/{self.json["pam_config_folder"]}',
                     shared_folder=True
-                ))
+                )
+                if uid is None:
+                    display(f'Warning: Unable to create folder {json["pam_config_folder"]}. If it already exists, this warning is expected.','yellow')
+                else:
+                    shared_folder_uids.append(uid)
+                
             for folder in self.json['user_folders']:
                 debug(f'Creating shared folder {folder}',DEBUG)
                 uid = MKDIR.execute(
