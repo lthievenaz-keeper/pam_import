@@ -1,7 +1,5 @@
 from utils import *
 
-DOCKER_FILE = 'docker-compose.yml'
-
 DB_CONFIG = {
     'host': '127.0.0.1',
     'user': 'guacamole_user',
@@ -9,6 +7,8 @@ DB_CONFIG = {
     'database': 'guacamole_db',
     'port': 3306
 }
+
+TOTP_ACCOUNT = 'kcm-totp@keepersecurity.com'
 
 SQL = {
     'groups': """
@@ -71,7 +71,7 @@ class KCM_import:
         display('# KCM Import','bold yellow')
         # Collect import method
         display('What database are you running on KCM?', 'cyan')
-        list_items(['(1) MySQL','(2) PostgreSQL'])
+        list_items(['(1) MySQL','(2) PostgreSQL (coming soon)'])
         self.database = handle_prompt({'1':'MYSQL','2':'POSTGRES'})
         
         self.collect_db_config()
@@ -387,7 +387,7 @@ Connection group B1/
                 dig = user['oneTimeCode']["totp-digits"]
                 period = user['oneTimeCode']["totp-period"]
                 secret = user['oneTimeCode']["totp-secret"]
-                user['oneTimeCode'] = f'tpauth://totp/?secret={secret}&issuer=&algorithm={alg}&digits={dig}&period={period}'
+                user['oneTimeCode'] = f'tpauth://totp/{TOTP_ACCOUNT}?secret={secret}&issuer=&algorithm={alg}&digits={dig}&period={period}'
         
         # Sanitize pamHostname
         for resource in self.resource_records:
