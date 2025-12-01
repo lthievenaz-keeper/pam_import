@@ -71,7 +71,7 @@ class KCM_import:
         display('# KCM Import','bold yellow')
         # Collect import method
         display('What database are you running on KCM?', 'cyan')
-        list_items(['(1) MySQL','(2) PostgreSQL (coming soon)'])
+        list_items(['(1) MySQL','(2) PostgreSQL'])
         self.database = handle_prompt({'1':'MYSQL','2':'POSTGRES'})
         
         self.collect_db_config()
