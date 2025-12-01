@@ -136,16 +136,18 @@ class Project:
                     gateway_name = input('Gateway name: ')
                     display('What initialization do you need for this gateway?', 'cyan')
                     list_items([
-                        '(1) One Time Token',
-                        '(2) Configuration File (b64)',
-                        '(3) Configuration File (JSON)',
-                        '(4) Configuration File (k8s)',
+                        '(1) Windows (One Time Token)',
+                        '(2) Linux Native',
+                        '(3) Docker (b64 Configuration File)',
+                        '(4) JSON Configuration File',
+                        '(5) Kubernetes Configuration File',
                     ])
                     gateway_init = handle_prompt({
-                        '1':None,
-                        '2':'b64',
-                        '3':'json',
-                        '4':'k8s',
+                        '1':{'name':'windows','arg':None},
+                        '2':{'name':'linux','arg':None},
+                        '3':{'name':'docker','arg':'b64'},
+                        '4':{'name':'json','arg':'json'},
+                        '5':{'name':'k8s','arg':'k8s'},
                     })
                     self.json['gateways'].append({'name':gateway_name,'new_build':True,'init_method':gateway_init}) 
         self.autosave()
@@ -377,7 +379,6 @@ class Project:
         self.connection_records = []
         self.rbi_records = []
         self.tunnel_records = []
-        self.advanced_records = []
         display('# Commander Sign In')
         from keepercommander.params import KeeperParams
         from keepercommander.commands.ksm import KSMCommand
@@ -519,7 +520,7 @@ class Project:
             
             # Check if command has changed
             if result_command != base_commands[action]:
-                run_command(result_command)
+                run_command(result_command,False)
                 
                 
         def create_advanced_record(record,folder,command):
@@ -551,10 +552,10 @@ class Project:
             uid = None
             try:
                 uid = RecordAddCommand().execute(params,folder=folder,data=dumps(record_add))
-                api.sync_down(params)
+                #api.sync_down(params)
                 debug(f'Successfully set up PAM settings on record {uid}',DEBUG)
                 update_command = f'record-update -r {uid} {command.split(folder)[1]}'
-                run_command(update_command)
+                run_command(update_command,False)
             except:
                 display(f'Error: unable to create record {record["title"]} with pamSettings - ignoring pamSettings','bold red')
                 self.errors += 1
@@ -571,18 +572,24 @@ class Project:
                     config_objs = pam_configurations_get_all(params)
                     for config in self.json['pam_configs']:
                         for config_obj in config_objs:
-                            if loads(config_obj['data_unencrypted'].decode('utf-8'))['title'] == config['name']:
+                            if loads(config_obj['data_unencrypted'].decode('utf-8'))['title'] == config['name'] and config['new_build']:
                                 run_command(f'pam config remove {config_obj["record_uid"]}')
                 except:
                     pass
-                try:
-                     run_command(f'sm app remove "{app_name}" -f')
-                except:
-                    pass
-                try:
-                     run_command(f'rmdir "{self.json["name"]}" -f')
-                except:
-                    pass
+                if self.json['application']['new_build']:
+                    try:
+                         run_command(f'sm app remove "{app_name}" -f')
+                    except:
+                        pass
+                else:
+                    display('Application is not created by this project - deleting disabled')
+                if self.json['new_build']:
+                    try:
+                         run_command(f'rmdir "{self.json["name"]}" -f')
+                    except:
+                        pass
+                else:
+                    display('Project folder is not created by this project - deleting disabled')
             display('Data deleted','red')
             
             
@@ -658,7 +665,7 @@ class Project:
                 if gateway['new_build']:
                     display(f'Creating gateway {gateway["name"]}...','yellow')
                     try:
-                        gateway['token'] = create_gateway(params, gateway['name'], app_name, gateway['init_method'])
+                        gateway['token'] = create_gateway(params, gateway['name'], app_name, gateway['init_method']['arg'])
                         api.sync_down(params)
                         display('Done','italic green')
                     except Exception as e:
@@ -684,8 +691,10 @@ class Project:
                 
             display('Creating PAM User Records...','yellow')
             for folder in self.json['user_folders']:
-                for record in list_records(self.json['user_folders'][folder],folder):
+                record_list = list_records(self.json['user_folders'][folder],folder)
+                for i,record in enumerate(record_list):
                     if record:
+                        display(f'Creating record {i+1} of {len(record_list)}')
                         record['uid'] = create_record(record,folder)
                         self.records[record['title']] = record
             api.sync_down(params)
@@ -695,8 +704,10 @@ class Project:
             
             display('Creating PAM Resource Records...','yellow')
             for folder in self.json['resource_folders']:
-                for record in list_records(self.json['resource_folders'][folder],folder):
+                record_list = list_records(self.json['resource_folders'][folder],folder)
+                for i,record in enumerate(record_list):
                     if record:
+                        display(f'Creating record {i+1} of {len(record_list)}')
                         record['uid'] = create_record(record,folder)
                         self.records[record['title']] = record
             api.sync_down(params)
@@ -705,24 +716,28 @@ class Project:
             
             if self.connection_records:
                 display('Handling Connection Records...','yellow')
-                for record in self.connection_records:
+                for i,record in enumerate(self.connection_records):
+                    display(f'Handling connection {i+1} of {len(self.connection_records)}')
                     update_record(record,'connection')
+                api.sync_down(params)
             if self.rotation_records:
                 display('Handling Rotation Records...','yellow')
-                for record in self.rotation_records:
+                for i,record in enumerate(self.rotation_records):
+                    display(f'Handling rotation {i+1} of {len(self.rotation_records)}')
                     update_record(record,'rotation')
+                api.sync_down(params)
             if self.rbi_records:
                 display('Handling RBI Records...','yellow')
-                for record in self.rbi_records:
+                for i,record in enumerate(self.rbi_records):
+                    display(f'Handling RBI connection {i+1} of {len(self.rbi_records)}')
                     update_record(record,'rbi')
+                api.sync_down(params)
             if self.tunnel_records:
                 display('Handling Tunnel Records...','yellow')
-                for record in self.tunnel_records:
+                for i,record in enumerate(self.tunnel_records):
+                    display(f'Handling tunnel {i+1} of {len(self.tunnel_records)}')
                     update_record(record,'tunnel')
-            if self.advanced_records:
-                display('Handling Advanced PAM settings...','yellow')
-                for record in self.tunnel_records:
-                    advanced_update(record)
+                api.sync_down(params)
         except Exception as e:
             display(f'Critical error: {e}','bold red')
             self.errors +=1
@@ -734,6 +749,10 @@ class Project:
             gateway_info = []
             for gateway in self.json['gateways']:
                 if gateway['new_build'] and gateway['token']:
+                    if gateway['init_method']['name']=='linux':
+                        gateway['token'] = f'curl -fsSL https://keepersecurity.com/pam/install | sudo bash -s --  --token {gateway["token"]}'
+                    elif gateway['init_method']['name']=='docker':
+                         gateway['token'] = f'curl -fsSL https://keepersecurity.com/pam/gatewayctl/install | sudo bash -s -- -c {gateway["token"]}'
                     gateway_info.append(f'{gateway["name"]}: {gateway["token"]}')
             if gateway_info:
                 display('## Gateway initialization information:','green')
