@@ -1,7 +1,7 @@
 from utils import *
 
 AUTOSAVE = True
-DEBUG = True
+DEBUG = False
 
 class Project:
     def __init__(self):  
@@ -773,4 +773,5 @@ class Project:
             
             
 Project()
+
 
