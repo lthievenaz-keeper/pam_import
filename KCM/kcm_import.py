@@ -8,7 +8,7 @@ DB_CONFIG = {
     'port': 3306
 }
 
-TOTP_ACCOUNT = 'kcm-totp@keepersecurity.com'
+TOTP_ACCOUNT = 'kcm-totp%40keepersecurity.com'
 
 SQL = {
     'groups': """
@@ -387,7 +387,8 @@ Connection group B1/
                 dig = user['oneTimeCode']["totp-digits"]
                 period = user['oneTimeCode']["totp-period"]
                 secret = user['oneTimeCode']["totp-secret"]
-                user['oneTimeCode'] = f'tpauth://totp/{TOTP_ACCOUNT}?secret={secret}&issuer=&algorithm={alg}&digits={dig}&period={period}'
+                stripped_secret = ''.join([x for x in secret if x.isnumeric()])
+                user['oneTimeCode'] = f'otpauth://totp/{TOTP_ACCOUNT}?secret={stripped_secret}&issuer=&algorithm={alg}&digits={dig}&period={period}'
         
         # Sanitize pamHostname
         for resource in self.resource_records:
